@@ -1,0 +1,93 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+}
+
+/* HEADER */
+header {
+    background: #001f3f;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+/* HERO */
+.hero {
+    background: url('https://images.unsplash.com/photo-1504198458649-3128b932f49b') no-repeat center/cover;
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.hero h2 {
+    font-size: 40px;
+}
+
+/* SEARCH */
+.search-box {
+    text-align: center;
+    margin: 20px;
+}
+
+.search-box input {
+    padding: 12px;
+    margin: 5px;
+    width: 200px;
+}
+
+button {
+    padding: 12px 20px;
+    background: #0074D9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #005fa3;
+}
+
+/* CARD SECTIONS */
+.card {
+    background: white;
+    width: 70%;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+/* FLIGHT */
+.flight {
+    background: #fff;
+    padding: 15px;
+    margin: 10px;
+    border-left: 5px solid #0074D9;
+    border-radius: 5px;
+}
+
+/* HIDDEN */
+.hidden {
+    display: none;
+}
+
+/* Form error messages */
+.error {
+    color: #c0392b;
+    font-size: 13px;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+.small-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.muted {
+    color: #666;
+    font-size: 14px;
+}

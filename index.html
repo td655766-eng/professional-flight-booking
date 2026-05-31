@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyBooker USA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>✈️ SkyBooker USA</h1>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+    <h2>Book Flights Across the USA</h2>
+    <p>Fast • Easy • Secure</p>
+</section>
+
+<!-- SEARCH -->
+<section class="search-box">
+    <input type="text" id="from" placeholder="From (New York)">
+    <input type="text" id="to" placeholder="To (Los Angeles)">
+    <input type="date" id="date">
+    <button id="searchBtn">Search Flights</button>
+</section>
+
+<!-- RESULTS -->
+<section id="results"></section>
+
+<!-- BOOKING -->
+<section id="bookingSection" class="card hidden">
+    <h2>Passenger Details</h2>
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="email" id="email" placeholder="Email">
+    <div class="error" id="err-name"></div>
+    <div class="error" id="err-email"></div>
+    <p id="selectedFlight"></p>
+    <button id="continueBtn">Continue</button>
+</section>
+
+<!-- PAYMENT -->
+<section id="paymentSection" class="card hidden">
+    <h2>Payment</h2>
+    <input type="text" id="cardName" placeholder="Name on Card">
+    <div class="error" id="err-cardName"></div>
+    <input type="text" id="cardNumber" placeholder="Card Number" inputmode="numeric" maxlength="19">
+    <div class="error" id="err-cardNumber"></div>
+    <input type="text" id="cardExpiry" placeholder="MM/YY" inputmode="numeric" maxlength="5">
+    <div class="error" id="err-cardExpiry"></div>
+    <input type="text" id="cardCvv" placeholder="CVV" inputmode="numeric" maxlength="4">
+    <div class="error" id="err-cardCvv"></div>
+    <button id="payBtn">Pay Now</button>
+</section>
+
+<!-- HISTORY -->
+<section id="history" class="card">
+    <h2>Your Bookings</h2>
+    <div id="historyList"></div>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
