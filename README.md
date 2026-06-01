@@ -16,8 +16,9 @@ A simple static flight booking demo built with HTML, CSS, and JavaScript.
 1. Open `index.html` in your browser.
 2. Enter departure and destination cities.
 3. Select a flight to book.
-4. Fill in your name, email, and payment details.
-5. Confirm payment to save the booking.
+4. On the booking page, enter your name and email.
+5. Continue to the payment page and complete payment details.
+6. Confirm payment to save the booking.
 
 ## GitHub Pages
 

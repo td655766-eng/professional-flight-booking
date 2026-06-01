@@ -1,48 +1,190 @@
-const flights = [
-    { from: "New York", to: "Los Angeles", time: "9:00 AM", price: "$320" },
-    { from: "Chicago", to: "Miami", time: "1:00 PM", price: "$220" },
-    { from: "Dallas", to: "San Francisco", time: "6:00 PM", price: "$280" },
-    { from: "Atlanta", to: "Seattle", time: "11:00 AM", price: "$300" }
+const cityCodeMap = {
+    "new york": "NYC",
+    "los angeles": "LAX",
+    "chicago": "CHI",
+    "miami": "MIA",
+    "dallas": "DFW",
+    "san francisco": "SFO",
+    "atlanta": "ATL",
+    "seattle": "SEA",
+    "boston": "BOS",
+    "las vegas": "LAS",
+    "orlando": "MCO",
+    "denver": "DEN",
+    "houston": "IAH",
+    "phoenix": "PHX"
+};
+
+const sampleFlights = [
+    { from: "New York", to: "Los Angeles", time: "09:00", price: "$320", flightNumber: "SKY102", duration: "6h 10m" },
+    { from: "Chicago", to: "Miami", time: "13:00", price: "$220", flightNumber: "SKY218", duration: "3h 05m" },
+    { from: "Dallas", to: "San Francisco", time: "18:00", price: "$280", flightNumber: "SKY334", duration: "4h 20m" },
+    { from: "Atlanta", to: "Seattle", time: "11:00", price: "$300", flightNumber: "SKY450", duration: "5h 15m" }
 ];
 
 let selectedFlightData = null;
 let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
 
+const searchStatus = document.getElementById("searchStatus");
+
 displayHistory();
 
-function searchFlights() {
-    const from = document.getElementById("from").value.toLowerCase();
-    const to = document.getElementById("to").value.toLowerCase();
-
+async function searchFlights() {
+    const fromValue = document.getElementById("from").value.trim();
+    const toValue = document.getElementById("to").value.trim();
+    const dateValue = document.getElementById("date").value;
     const resultsDiv = document.getElementById("results");
+
     resultsDiv.innerHTML = "";
+    searchStatus.textContent = "";
 
-    const filtered = flights.filter(f =>
-        f.from.toLowerCase().includes(from) &&
-        f.to.toLowerCase().includes(to)
-    );
-
-    if (!filtered.length) {
-        resultsDiv.innerHTML = "<p style='text-align:center;'>No flights found</p>";
+    if (!fromValue || !toValue) {
+        searchStatus.textContent = "Enter both departure and destination cities.";
         return;
     }
 
-    filtered.forEach(f => {
+    if (fromValue.toLowerCase() === toValue.toLowerCase()) {
+        searchStatus.textContent = "Departure and destination cannot be the same.";
+        return;
+    }
+
+    const date = dateValue ? new Date(dateValue) : new Date();
+    const formattedDate = formatDateForDisplay(date);
+    const fromCode = getCityCode(fromValue);
+    const toCode = getCityCode(toValue);
+
+    searchStatus.innerHTML = `<span class="loader">Searching flights for ${formattedDate}...</span>`;
+
+    let flightsToShow = [];
+    if (fromCode && toCode) {
+        try {
+            const params = new URLSearchParams({
+                fly_from: fromCode,
+                fly_to: toCode,
+                date_from: formatDateForApi(date),
+                date_to: formatDateForApi(date),
+                partner: "picky",
+                limit: "6"
+            });
+            const response = await fetch(`https://api.skypicker.com/flights?${params}`);
+            const json = await response.json();
+            if (json.data && json.data.length) {
+                flightsToShow = json.data.map(f => ({
+                    from: f.cityFrom || fromValue,
+                    to: f.cityTo || toValue,
+                    time: f.dTimeUTC ? new Date(f.dTimeUTC * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : f.local_departure || '',
+                    price: f.price ? `$${f.price}` : "$0",
+                    flightNumber: f.route && f.route[0] ? `${f.route[0].airline}${f.route[0].flight_no}` : "N/A",
+                    duration: f.fly_duration || "N/A",
+                    date: formattedDate,
+                    originAirport: f.flyFrom || fromCode,
+                    destinationAirport: f.flyTo || toCode
+                }));
+            }
+        } catch (error) {
+            console.warn("Live flight search failed, using fallback data", error);
+        }
+    }
+
+    if (!flightsToShow.length) {
+        flightsToShow = getSampleFlights(fromValue, toValue, formattedDate);
+        searchStatus.textContent = "Showing demo flights. For real-time results, use one of the supported U.S. cities.";
+    } else {
+        searchStatus.textContent = `Showing live flight results for ${fromValue} → ${toValue} on ${formattedDate}.`;
+    }
+
+    renderFlights(flightsToShow);
+}
+
+function getCityCode(city) {
+    return cityCodeMap[city.toLowerCase()] || null;
+}
+
+function formatDateForApi(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function formatDateForDisplay(date) {
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getSampleFlights(from, to, date) {
+    const sample = sampleFlights.filter(f =>
+        f.from.toLowerCase().includes(from.toLowerCase()) &&
+        f.to.toLowerCase().includes(to.toLowerCase())
+    );
+
+    if (!sample.length) {
+        return [
+            {
+                from: capitalizeAllWords(from),
+                to: capitalizeAllWords(to),
+                time: "10:30",
+                price: "$345",
+                flightNumber: "SKY400",
+                duration: "4h 30m",
+                date,
+                originAirport: "N/A",
+                destinationAirport: "N/A"
+            },
+            {
+                from: capitalizeAllWords(from),
+                to: capitalizeAllWords(to),
+                time: "16:15",
+                price: "$412",
+                flightNumber: "SKY412",
+                duration: "5h 05m",
+                date,
+                originAirport: "N/A",
+                destinationAirport: "N/A"
+            }
+        ];
+    }
+
+    return sample.map(f => ({ ...f, date }));
+}
+
+function capitalizeAllWords(value) {
+    return value
+        .split(' ')
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
+function renderFlights(flightsArray) {
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    if (!flightsArray.length) {
+        resultsDiv.innerHTML = "<p style='text-align:center;'>No flights found for that route.</p>";
+        return;
+    }
+
+    flightsArray.forEach(f => {
         const div = document.createElement("div");
         div.classList.add("flight");
 
-        const h3 = document.createElement("h3");
-        h3.textContent = `${f.from} → ${f.to}`;
+        const title = document.createElement("h3");
+        title.textContent = `${f.from} → ${f.to}`;
 
-        const info = document.createElement("p");
-        info.textContent = `${f.time} | ${f.price}`;
+        const details = document.createElement("p");
+        details.classList.add("flight-details");
+        details.textContent = `${f.date} · ${f.time} · ${f.duration} · ${f.flightNumber}`;
+
+        const price = document.createElement("p");
+        price.textContent = f.price;
 
         const btn = document.createElement("button");
         btn.textContent = "Book";
         btn.addEventListener("click", () => bookFlight(f));
 
-        div.appendChild(h3);
-        div.appendChild(info);
+        div.appendChild(title);
+        div.appendChild(details);
+        div.appendChild(price);
         div.appendChild(btn);
 
         resultsDiv.appendChild(div);
