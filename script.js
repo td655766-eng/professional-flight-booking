@@ -225,45 +225,57 @@ function goToPayment() {
 }
 
 function confirmPayment() {
-    const card = document.getElementById("cardNumber").value || "";
-    const expiry = document.getElementById("cardExpiry").value || "";
-    const cvv = document.getElementById("cardCvv").value || "";
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
+    // called only on payment.html
+    const selectedFlight = getSessionData('selectedFlight');
+    const passengerInfo = getSessionData('passengerInfo');
 
-    if (!selectedFlightData) {
-        clearErrors();
-        showError('name', 'No flight selected. Please pick a flight first.');
+    if (!selectedFlight) {
+        alert('No flight selected. Returning to home.');
+        window.location.href = 'index.html';
         return;
     }
 
-    clearErrors();
-    let ok = true;
-    if (!name) { showError('name', 'Enter passenger full name'); ok = false; }
-    if (!email) { showError('email', 'Enter passenger email'); ok = false; }
-    if (!ok) return;
-    if (!isValidEmail(email)) { showError('email', 'Enter a valid email address'); return; }
+    const card = document.getElementById('cardNumber').value || '';
+    const expiry = document.getElementById('cardExpiry').value || '';
+    const cvv = document.getElementById('cardCvv').value || '';
 
-    const rawCard = card.replace(/\s/g, '');
-    if (!rawCard || rawCard.length < 12) { showError('cardNumber','Enter a valid card number'); return; }
-    if (!luhnCheck(rawCard)) { showError('cardNumber','Card number failed validation'); return; }
-    if (!isValidExpiry(expiry)) { showError('cardExpiry','Enter a valid future expiry date MM/YY'); return; }
-    if (!/^\d{3,4}$/.test(cvv)) { showError('cardCvv','Enter a valid CVV (3 or 4 digits)'); return; }
+    clearErrors();
+    // basic client-side checks before redirecting to Checkout
+    let ok = true;
+    if (!card.replace(/\D/g, '').length) { showError('cardNumber', 'Enter card number'); ok = false; }
+    if (!isValidExpiry(expiry)) { showError('cardExpiry', 'Enter expiry MM/YY'); ok = false; }
+    if (!/^(\d{3,4})$/.test(cvv)) { showError('cardCvv', 'Enter CVV'); ok = false; }
+    if (!ok) return;
 
     const booking = {
-        name,
-        email,
-        ...selectedFlightData,
+        ...selectedFlight,
+        ...passengerInfo,
+        price: selectedFlight.price,
         bookedAt: new Date().toISOString()
     };
 
-    bookings.push(booking);
-    localStorage.setItem("bookings", JSON.stringify(bookings));
+    // persist last booking to session so success page can show it after returning from Checkout
+    setSessionData('lastBooking', booking);
 
-    displayHistory();
-
-    const last4 = rawCard.slice(-4);
-    document.getElementById("paymentSection").innerHTML = `\n        <h2 style="color:green;">✅ Payment Successful</h2>\n        <p>Your flight is booked! Charged card ending in ${last4}.</p>\n    `;
+    (async () => {
+        try {
+            const res = await fetch('/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booking })
+            });
+            const data = await res.json();
+            if (data && data.url) {
+                window.location = data.url;
+            } else {
+                console.error('Invalid checkout response', data);
+                alert('Failed to start payment. Try again later.');
+            }
+        } catch (err) {
+            console.error('Checkout request failed', err);
+            alert('Failed to start payment. Try again later.');
+        }
+    })();
 }
 
 function displayHistory() {
@@ -416,12 +428,70 @@ function removeSessionData(key) {
         console.warn('sessionStorage unavailable', e);
     }
 }
-// Attach listeners for static buttons
-const searchBtn = document.getElementById("searchBtn");
-if (searchBtn) searchBtn.addEventListener("click", searchFlights);
 
-const continueBtn = document.getElementById("continueBtn");
-if (continueBtn) continueBtn.addEventListener("click", goToPayment);
-
-const payBtn = document.getElementById("payBtn");
-if (payBtn) payBtn.addEventListener("click", confirmPayment);
+// Persist lastBooking from session into localStorage if not already stored
+function persistLastBookingIfNeeded() {
+    const lastBooking = getSessionData('lastBooking');
+    if (!lastBooking) return;
+    const exists = bookings.some(b => b.bookedAt === lastBooking.bookedAt && b.name === lastBooking.name);
+    if (!exists) {
+        bookings.push(lastBooking);
+        localStorage.setItem('bookings', JSON.stringify(bookings));
+    }
+    removeSessionData('lastBooking');
+}
+// Page-specific initialization attaches listeners during DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    const page = window.location.pathname.split('/').pop() || 'index.html';
+    if (page === '' || page === 'index.html') {
+        // index page
+        displayHistory();
+        const sb = document.getElementById('searchBtn');
+        if (sb) sb.addEventListener('click', searchFlights);
+    } else if (page === 'booking.html') {
+        const selected = getSessionData('selectedFlight');
+        if (!selected) {
+            window.location.href = 'index.html';
+            return;
+        }
+        const bookingInfo = document.getElementById('bookingInfo');
+        if (bookingInfo) {
+            bookingInfo.innerHTML = `\n                <p class="flight-details"><strong>${selected.from} → ${selected.to}</strong></p>\n                <p class="flight-details">${selected.date} · ${selected.time} · ${selected.duration} · ${selected.flightNumber}</p>\n                <p class="flight-details">Price: ${selected.price}</p>\n            `;
+        }
+        const continueBtn = document.getElementById('continueBtn');
+        if (continueBtn) continueBtn.addEventListener('click', () => {
+            clearErrors();
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            let ok = true;
+            if (!name) { showError('name', 'Enter passenger full name'); ok = false; }
+            if (!email) { showError('email', 'Enter passenger email'); ok = false; }
+            if (!ok) return;
+            if (!isValidEmail(email)) { showError('email', 'Enter a valid email'); return; }
+            setSessionData('passengerInfo', { name, email });
+            window.location.href = 'payment.html';
+        });
+    } else if (page === 'payment.html') {
+        const selected = getSessionData('selectedFlight');
+        const passenger = getSessionData('passengerInfo');
+        if (!selected) { window.location.href = 'index.html'; return; }
+        if (!passenger) { window.location.href = 'booking.html'; return; }
+        const paymentInfo = document.getElementById('paymentInfo');
+        if (paymentInfo) {
+            paymentInfo.innerHTML = `\n                <p class="flight-details"><strong>${selected.from} → ${selected.to}</strong></p>\n                <p class="flight-details">${selected.date} · ${selected.time} · ${selected.duration} · ${selected.flightNumber}</p>\n                <p class="flight-details">Passenger: ${passenger.name}</p>\n                <p class="flight-details">Email: ${passenger.email}</p>\n                <p class="flight-details">Price: ${selected.price}</p>\n            `;
+        }
+        const payBtn = document.getElementById('payBtn');
+        if (payBtn) payBtn.addEventListener('click', confirmPayment);
+    } else if (page === 'success.html') {
+        persistLastBookingIfNeeded();
+        const lastBooking = getSessionData('lastBooking') || getLastBooking();
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) {
+            if (!lastBooking) {
+                successMessage.innerHTML = '<p class="flight-details">Your booking was completed successfully.</p>';
+            } else {
+                successMessage.innerHTML = `\n                    <h3>Booking Confirmed</h3>\n                    <p class="flight-details"><strong>${lastBooking.from} → ${lastBooking.to}</strong></p>\n                    <p class="flight-details">${lastBooking.date} · ${lastBooking.time} · ${lastBooking.flightNumber}</p>\n                    <p class="flight-details">Passenger: ${lastBooking.name}</p>\n                    <p class="flight-details">Total Paid: ${lastBooking.price}</p>\n                `;
+            }
+        }
+    }
+});
