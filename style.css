@@ -1,72 +1,114 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #f5f7fa;
+    background: #0f172a;
+    color: #e2e8f0;
 }
 
 /* HEADER */
 header {
-    background: #001f3f;
-    color: white;
-    padding: 20px;
+    background: linear-gradient(135deg, #0f172a 0%, #122a4b 100%);
+    color: #f8fafc;
+    padding: 24px 20px;
     text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
 }
 
 /* HERO */
 .hero {
-    background: url('https://images.unsplash.com/photo-1504198458649-3128b932f49b') no-repeat center/cover;
-    color: white;
+    background: linear-gradient(rgba(3, 37, 66, 0.8), rgba(6, 44, 78, 0.8)), url('https://images.unsplash.com/photo-1504198458649-3128b932f49b') no-repeat center/cover;
+    color: #f8fafc;
     text-align: center;
     padding: 80px 20px;
 }
 
 .hero h2 {
-    font-size: 40px;
+    font-size: 2.75rem;
+    margin-bottom: 12px;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: #cbd5e1;
 }
 
 /* SEARCH */
 .search-box {
     text-align: center;
-    margin: 20px;
+    margin: 20px auto;
+    max-width: 900px;
+    background: #12263b;
+    padding: 24px 20px;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }
 
 .search-box input {
-    padding: 12px;
-    margin: 5px;
+    padding: 14px 16px;
+    margin: 8px 8px;
     width: 200px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    background: #15233f;
+    color: #f8fafc;
+}
+
+.search-box input::placeholder {
+    color: #94a3b8;
 }
 
 button {
-    padding: 12px 20px;
-    background: #0074D9;
+    padding: 12px 22px;
+    background: #0f78d4;
     color: white;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 10px;
+    transition: background 0.2s ease;
 }
 
 button:hover {
-    background: #005fa3;
+    background: #0b5ebf;
+}
+
+button:focus {
+    outline: 2px solid #7dd3fc;
+    outline-offset: 2px;
 }
 
 /* CARD SECTIONS */
 .card {
-    background: white;
-    width: 70%;
+    background: #13203b;
+    width: 80%;
     margin: 20px auto;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     text-align: center;
+    border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 /* FLIGHT */
 .flight {
-    background: #fff;
-    padding: 15px;
-    margin: 10px;
-    border-left: 5px solid #0074D9;
-    border-radius: 5px;
+    background: #142a45;
+    padding: 18px;
+    margin: 12px 0;
+    border-left: 5px solid #0f78d4;
+    border-radius: 14px;
+    text-align: left;
+}
+
+.flight h3 {
+    margin: 0 0 8px;
+}
+
+.flight p {
+    margin: 6px 0;
+    color: #cbd5e1;
 }
 
 /* HIDDEN */
@@ -74,20 +116,55 @@ button:hover {
     display: none;
 }
 
+.status {
+    text-align: center;
+    color: #94a3b8;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.flight-details {
+    color: #cbd5e1;
+    margin: 8px 0;
+    font-size: 0.95rem;
+}
+
+.loader {
+    color: #7dd3fc;
+    font-weight: bold;
+}
+
 /* Form error messages */
 .error {
-    color: #c0392b;
+    color: #fca5a5;
     font-size: 13px;
     margin-top: 6px;
     min-height: 18px;
+    text-align: left;
 }
 
 .small-btn {
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 13px;
 }
 
 .muted {
-    color: #666;
+    color: #94a3b8;
     font-size: 14px;
+}
+
+input, button {
+    font-family: inherit;
+}
+
+@media (max-width: 768px) {
+    .search-box, .card {
+        width: 92%;
+        padding: 18px;
+    }
+
+    .search-box input {
+        width: 100%;
+        max-width: 280px;
+    }
 }
