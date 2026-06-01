@@ -25,18 +25,15 @@ const sampleFlights = [
 let selectedFlightData = null;
 let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
 
-const searchStatus = document.getElementById("searchStatus");
-
-displayHistory();
-
 async function searchFlights() {
     const fromValue = document.getElementById("from").value.trim();
     const toValue = document.getElementById("to").value.trim();
     const dateValue = document.getElementById("date").value;
     const resultsDiv = document.getElementById("results");
+    const searchStatus = document.getElementById("searchStatus");
 
     resultsDiv.innerHTML = "";
-    searchStatus.textContent = "";
+    if (searchStatus) searchStatus.textContent = "";
 
     if (!fromValue || !toValue) {
         searchStatus.textContent = "Enter both departure and destination cities.";
@@ -53,7 +50,7 @@ async function searchFlights() {
     const fromCode = getCityCode(fromValue);
     const toCode = getCityCode(toValue);
 
-    searchStatus.innerHTML = `<span class="loader">Searching flights for ${formattedDate}...</span>`;
+    if (searchStatus) searchStatus.innerHTML = `<span class="loader">Searching flights for ${formattedDate}...</span>`;
 
     let flightsToShow = [];
     if (fromCode && toCode) {
@@ -88,9 +85,9 @@ async function searchFlights() {
 
     if (!flightsToShow.length) {
         flightsToShow = getSampleFlights(fromValue, toValue, formattedDate);
-        searchStatus.textContent = "Showing demo flights. For real-time results, use one of the supported U.S. cities.";
+        if (searchStatus) searchStatus.textContent = "Showing demo flights. For real-time results, use one of the supported U.S. cities.";
     } else {
-        searchStatus.textContent = `Showing live flight results for ${fromValue} → ${toValue} on ${formattedDate}.`;
+        if (searchStatus) searchStatus.textContent = `Showing live flight results for ${fromValue} → ${toValue} on ${formattedDate}.`;
     }
 
     renderFlights(flightsToShow);
@@ -439,6 +436,11 @@ function persistLastBookingIfNeeded() {
         localStorage.setItem('bookings', JSON.stringify(bookings));
     }
     removeSessionData('lastBooking');
+}
+
+function getLastBooking() {
+    if (!bookings || !bookings.length) return null;
+    return bookings[bookings.length - 1];
 }
 // Page-specific initialization attaches listeners during DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
