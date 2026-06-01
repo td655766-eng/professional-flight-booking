@@ -178,9 +178,20 @@ function renderFlights(flightsArray) {
         const price = document.createElement("p");
         price.textContent = f.price;
 
-        const btn = document.createElement("button");
-        btn.textContent = "Book";
-        btn.addEventListener("click", () => bookFlight(f));
+            const btn = document.createElement("a");
+            btn.textContent = 'Book';
+            btn.href = 'booking.html';
+            btn.setAttribute('role', 'button');
+            btn.classList.add('book-btn');
+            // store selected flight before navigation
+            btn.addEventListener('click', (e) => {
+                try {
+                    setSessionData('selectedFlight', f);
+                } catch (err) {
+                    console.warn('Could not save selected flight to sessionStorage', err);
+                }
+                // navigation will proceed via the anchor href
+            });
 
         div.appendChild(title);
         div.appendChild(details);
