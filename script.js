@@ -389,6 +389,33 @@ function showError(id, message) {
 function clearErrors() {
     ['name','email','cardName','cardNumber','cardExpiry','cardCvv'].forEach(k => showError(k, ''));
 }
+
+// Session helpers for multi-page flow
+function setSessionData(key, value) {
+    try {
+        sessionStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+        console.warn('sessionStorage unavailable', e);
+    }
+}
+
+function getSessionData(key) {
+    try {
+        const v = sessionStorage.getItem(key);
+        return v ? JSON.parse(v) : null;
+    } catch (e) {
+        console.warn('sessionStorage unavailable', e);
+        return null;
+    }
+}
+
+function removeSessionData(key) {
+    try {
+        sessionStorage.removeItem(key);
+    } catch (e) {
+        console.warn('sessionStorage unavailable', e);
+    }
+}
 // Attach listeners for static buttons
 const searchBtn = document.getElementById("searchBtn");
 if (searchBtn) searchBtn.addEventListener("click", searchFlights);
